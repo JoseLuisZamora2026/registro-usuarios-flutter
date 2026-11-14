@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/preferences_service.dart';
+import 'profile_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,13 +17,34 @@ class RegisterScreen extends StatefulWidget {
 
   bool mostrarContrasena = false;
 
-  void registrarUsuario() {
-    //pendiente: conectar con PrefererencesService de Angel.
+  Future<void> registrarUsuario() async {
+    final correo = correoController.text.trim();
+    final usuario = usuarioController.text.trim();
+    final contrasena = contrasenaController.text;
 
-    ScaffoldMessenger.of(context).showSnackBar
-      (const SnackBar(content: Text('Formulario listo. Falta conectar el guardado.'),
-    ),
-    );
+    if (correo.isEmpty || usuario.isEmpty || contrasena.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa todos los campos.',
+        ),
+        ),
+      );
+      return;
+    }
+    try {
+      await PreferencesService.guardarUsuario(
+          correo: correo, usuario: usuario, contrasena: contrasena);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const ProfileScreen(),
+        ), (route) => false,);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar
+        ( SnackBar(content: Text('Error al guardar el registro: $e'),
+      ),
+      );
+    }
   }
   @override
     void dispose(){
